@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:inboundmobile/core/constants/app_colors.dart';
+import 'package:inboundmobile/core/helpers/%20snackbar_helper.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
 import '../../../app/router/app_router.dart';
@@ -18,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
               'InBound',
               style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
             ),
-            Text('Smart Attendance System', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w100)),
+            Text(
+              'Smart Attendance System',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w100),
+            ),
             const SizedBox(height: 30),
             Form(
               key: _formKey,
@@ -137,14 +140,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        auth.login(
-                          emailController.text.trim(),
-                          passwordController.text.trim(),
-                        );
-                      }
-                    },
+                    onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          FocusScope.of(context).unfocus(); // ❗️ Close keyboard
+
+                          final message = await auth.login(
+                            emailController.text.trim(),
+                            passwordController.text.trim(),
+                          );
+
+                          if (message != null) {
+                            showSnackBar(context, message, AppColors.error);
+                          } else {
+                            showSnackBar(context, 'Login successful', AppColors.success);
+                            // ❗️Let the snackbar render first, then navigate
+                            await Future.delayed(Duration(milliseconds: 500));
+                            context.router.replace(LayoutRoute());
+                          }
+                        }
+                      },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(
@@ -155,14 +170,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: Text(
-                      "Sign In",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child:
+                        auth.isLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : Text(
+                              "Sign In",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                   ),
                 ],
               ),

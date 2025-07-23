@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Simulate loading, then navigate to login or dashboard
     Timer(const Duration(seconds: 2), () {
-      context.router.replace(LoginRoute());
+      context.router.replace(LayoutRoute());
     });
   }
 

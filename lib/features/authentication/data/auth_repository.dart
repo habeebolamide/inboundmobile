@@ -1,33 +1,37 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:inboundmobile/core/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/user_model.dart';
 
 class AuthRepository {
-  final String baseUrl = 'https://your-api.com/api';
-
-  Future<UserModel> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/login'),
-      body: {'email': email, 'password': password},
+  final _api = ApiService();
+  Future<String?> login(String email, String password) async {
+    print('Login button pressed');
+    print('Calling auth.login...');
+    final response = await 
+      _api.post('/v1/auth/login',
+      body: {'email': email, 'password': password}
     );
+    // print('auth.login done, message: $response');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final prefs = await SharedPreferences.getInstance();
+      print('token: ${data['data']['token']}');
+      await prefs.setString('token', data['data']['token']); // Save token
+      return null;
+    } else {
+      // print('Login failed: ${response.body}');
+      throw jsonDecode(response.body)['message'] ?? 'Login failed';
+    }
+  }
+  
+  Future<UserModel?> fetchUser() async {
+    final response = await _api.get('/v1/auth/user');
 
     if (response.statusCode == 200) {
       return UserModel.fromJson(jsonDecode(response.body)['user']);
-    } else {
-      throw Exception('Failed to login');
     }
-  }
 
-  Future<UserModel> register(String name, String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/register'),
-      body: {'name': name, 'email': email, 'password': password},
-    );
-
-    if (response.statusCode == 201) {
-      return UserModel.fromJson(jsonDecode(response.body)['user']);
-    } else {
-      throw Exception('Failed to register');
-    }
+    return null;
   }
 }
