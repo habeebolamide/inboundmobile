@@ -6,8 +6,6 @@ import '../model/user_model.dart';
 class AuthRepository {
   final _api = ApiService();
   Future<String?> login(String email, String password) async {
-    print('Login button pressed');
-    print('Calling auth.login...');
     final response = await 
       _api.post('/v1/auth/login',
       body: {'email': email, 'password': password}
@@ -16,7 +14,6 @@ class AuthRepository {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final prefs = await SharedPreferences.getInstance();
-      print('token: ${data['data']['token']}');
       await prefs.setString('token', data['data']['token']); // Save token
       return null;
     } else {

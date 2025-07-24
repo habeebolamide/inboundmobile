@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:inboundmobile/app/router/auth_guard.dart';
 import 'package:inboundmobile/features/authentication/provider/auth_provider.dart';
+import 'package:inboundmobile/features/dashboard/provider/session_provider.dart';
 import 'package:provider/provider.dart';
 import 'app/router/app_router.dart';
 final _appRouter = AppRouter(AuthGuard(),LoginGuard()); // ✅ Initialize router
@@ -10,6 +11,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => SessionProvider())
       ],
       child: const MyApp(),
     ),
