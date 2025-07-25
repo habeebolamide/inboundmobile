@@ -40,8 +40,8 @@ class _CustomLoaderState extends State<CustomLoader>
         scale: _animation,
         child: Image.asset(
           'assets/icon.png',
-          width: 100,
-          height: 100,
+          width: 200,
+          height: 200,
         ),
       ),
     );

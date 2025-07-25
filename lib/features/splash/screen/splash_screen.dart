@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:inboundmobile/app/router/app_router.dart';
+import 'package:inboundmobile/core/constants/app_colors.dart';
 
 @RoutePage()
 
@@ -26,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF696CFF), // Primary app color
+      backgroundColor: AppColors.primary, // Primary app color
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

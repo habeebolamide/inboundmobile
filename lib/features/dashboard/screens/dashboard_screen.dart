@@ -26,6 +26,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return DateFormat('EEEE, MMMM d, y').format(now);
   }
 
+  String formattedSDate(time) {
+    return DateFormat('h:mm a').format(time);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -37,7 +41,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final sessionProvider = Provider.of<SessionProvider>(context);
-    // print('Testing session:${sessionProvider.sessions}');
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
 
@@ -70,6 +73,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   )
                 else
                   ...sessionProvider.sessions.map((session) {
+                    String status = session.status ?? 'unknown'; // Get status from session
+
+                    Color chipColor;
+                    FaIcon icon;
+                    String labelText;
+
+                    // Determine chip properties based on session status
+                    switch (status.toLowerCase()) {
+                      case 'scheduled':
+                        chipColor = AppColors.primary; // Color for scheduled
+                        icon = FaIcon(FontAwesomeIcons.calendar, color: Colors.white);
+                        labelText = 'Scheduled';
+                        break;
+                      case 'ongoing':
+                        chipColor = AppColors.success; // Color for ongoing
+                        icon = FaIcon(FontAwesomeIcons.play, color: Colors.white);
+                        labelText = 'Ongoing';
+                        break;
+                      case 'ended':
+                        chipColor = Colors.grey; // Color for ended
+                        icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                        labelText = 'Ended';
+                        break;
+                      case 'cancelled':
+                        chipColor = Colors.red; // Color for cancelled
+                        icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                        labelText = 'Cancelled';
+                        break;
+                      default:
+                        chipColor = Colors.grey; // Default color for unknown status
+                        icon = FaIcon(FontAwesomeIcons.question, color: Colors.white);
+                        labelText = 'Unknown';
+                        break;
+                    }
+
                     return Card(
                       margin: EdgeInsets.all(_deviceWidth * 0.05),
                       child: Padding(
@@ -77,17 +115,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              session.title ?? 'Untitled',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  session.title ?? 'Untitled',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Chip(
+                                  label: Text(labelText, style: TextStyle(color: Colors.white)),
+                                  avatar: icon,
+                                  backgroundColor: chipColor,
+                                )
+                              ],
                             ),
                             const SizedBox(height: 10),
-                            Text("Time: ${session.startTime} - ${session.endTime}"),
+                            Text(
+                              "Time: ${formattedSDate(session.startTime)} - ${formattedSDate(session.endTime)}",
+                            ),
                             const SizedBox(height: 5),
                             Text("Location: ${session.location ?? 'Unknown'}"),
+                            const SizedBox(height: 15),
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                              ),
+                              child: Text(
+                                'CheckIn',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
                           ],
                         ),
                       ),
@@ -112,7 +177,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           right: _deviceWidth * 0.05,
         ),
         decoration: const BoxDecoration(
-          color: AppColors.secondary,
+          color: AppColors.primary,
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(50),
             bottomRight: Radius.circular(50),
