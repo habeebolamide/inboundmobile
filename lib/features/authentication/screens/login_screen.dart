@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppColors.secondary, AppColors.background],
+            colors: [AppColors.primary, AppColors.background],
           ),
         ),
         child: Column(

@@ -41,7 +41,6 @@ class ApiService {
     bool useAuth = false,
   }) async {
     final uri = Uri.parse('$baseUrl$endpoint');
-    print('POST Request to: $uri with body: $body');
     final headers = await _getHeaders();
     return http.post(uri, headers: headers, body: jsonEncode(body));
   }

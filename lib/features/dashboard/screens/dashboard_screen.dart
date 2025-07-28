@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:inboundmobile/app/router/app_router.dart';
 import 'package:inboundmobile/core/constants/app_colors.dart';
+import 'package:inboundmobile/core/helpers/%20snackbar_helper.dart';
 import 'package:inboundmobile/core/helpers/loader_utils.dart';
+import 'package:inboundmobile/features/dashboard/data/session_repository.dart';
 import 'package:inboundmobile/features/dashboard/provider/session_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -41,6 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final sessionProvider = Provider.of<SessionProvider>(context);
+    final location = SessionRepository();
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
 
@@ -140,7 +143,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Text("Location: ${session.location ?? 'Unknown'}"),
                             const SizedBox(height: 15),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: session.checkin_status == 'yes' ? null : () {
+                                
+                                if (status.toLowerCase() == 'ongoing') {
+                                  final message = location.getCurrentLocation(session.id);
+                                  showSnackBar(context, message.toString(), AppColors.success);
+                                  location.todaySession;
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Cannot check in for $status session')),
+                                  );
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                               ),
