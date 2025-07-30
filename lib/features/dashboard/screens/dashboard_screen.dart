@@ -177,18 +177,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         if (status.toLowerCase() == 'ongoing') {
                                           final message = await location
                                               .getCurrentLocation(session.id);
-                                          print(message.toString());
 
                                           if (message == null) {
-                                            ScaffoldMessenger.of(
+                                            showSnackBar(
                                               context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Check-in successful',
-                                                ),
-                                              ),
+                                              "Checked in successfully",
+                                              AppColors.success,
                                             );
+                                            sessionProvider.todaySession();
                                           } else {
                                             showSnackBar(
                                               context,
@@ -196,12 +192,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               AppColors.error,
                                             );
                                           }
-
-                                          location.todaySession;
-
                                           setState(() {
                                             isLoading = false;
                                           });
+
                                         } else {
                                           ScaffoldMessenger.of(
                                             context,
