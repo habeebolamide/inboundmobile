@@ -25,9 +25,18 @@ class GeolocationService {
       return Future.error('Location permission denied forever');
     }
 
-    // Get the current position
+    // Use LocationSettings for the desired accuracy
+    LocationSettings locationSettings = LocationSettings(
+      accuracy:
+          LocationAccuracy
+              .bestForNavigation, // You can choose accuracy level (low, medium, high)
+      distanceFilter:
+          0, // (optional) Minimum distance (in meters) between location updates
+    );
+
+    // Get the current position with the updated settings
     Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      locationSettings: locationSettings,
     );
 
     return position;

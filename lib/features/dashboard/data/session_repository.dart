@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:inboundmobile/core/services/api_service.dart';
 import 'package:inboundmobile/core/services/geolocation_service.dart';
 import 'package:inboundmobile/features/dashboard/model/session_model.dart';
-
+import 'package:flutter_timezone/flutter_timezone.dart';
 class SessionRepository {
   final _api = ApiService();
   final geolocation = GeolocationService();
@@ -32,6 +32,8 @@ class SessionRepository {
 
   Future<String?> getCurrentLocation(int sessionId) async {
     Position position = await geolocation.getCurrentLocation();
+    // final String location = await FlutterTimezone.getLocalTimezone();
+    // print("Available Timezones: $location");
     final data = {
       "sessionId":sessionId,
       "latitude":position.latitude,
@@ -39,12 +41,11 @@ class SessionRepository {
     };
 
     final response = await _api.post('/v1/organization/sessions/checkin',body: data);
-
+    print('Response body: ${response.body}');
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['message'];
+      return null;
     }else{
-      // print(jsonDecode(response.body));
-      throw Exception(jsonDecode(response.body)['message'] ?? 'An Error Occured');
+      return jsonDecode(response.body)['message'] ?? 'An Error Occured';
     }
   }
 

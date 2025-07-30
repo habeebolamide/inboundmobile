@@ -46,6 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final location = SessionRepository();
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
+    bool isLoading = false;
 
     if (sessionProvider.isLoading == true) {
       return const CustomLoader(); // Your animated loader here
@@ -142,13 +143,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(height: 5),
                             Text("Location: ${session.location ?? 'Unknown'}"),
                             const SizedBox(height: 15),
+                            isLoading
+                                ? const Center(child: CircularProgressIndicator())
+                                : 
                             ElevatedButton(
-                              onPressed: session.checkin_status == 'yes' ? null : () {
-                                
+                              onPressed: session.checkin_status == 'yes' ? null : () async {
+                                setState(() {
+                                  isLoading = true;
+                                });
                                 if (status.toLowerCase() == 'ongoing') {
-                                  final message = location.getCurrentLocation(session.id);
-                                  showSnackBar(context, message.toString(), AppColors.success);
+                                  final message = await location.getCurrentLocation(session.id);
+                                  print(message.toString());
+                                  if (message == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Check-in successful')),
+                                    );
+                                  } else{
+                                    showSnackBar(context, message.toString(), AppColors.error);
+                                  }
                                   location.todaySession;
+                                  setState(() {
+                                    isLoading = false;
+                                  });
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('Cannot check in for $status session')),
