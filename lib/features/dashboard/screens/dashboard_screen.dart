@@ -22,7 +22,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late double _deviceHeight;
   late double _deviceWidth;
-
+  bool isLoading = false;
+  final location = SessionRepository();
   String formattedDate() {
     final now = DateTime.now();
     return DateFormat('EEEE, MMMM d, y').format(now);
@@ -43,10 +44,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final sessionProvider = Provider.of<SessionProvider>(context);
-    final location = SessionRepository();
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
-    bool isLoading = false;
 
     if (sessionProvider.isLoading == true) {
       return const CustomLoader(); // Your animated loader here
@@ -77,7 +76,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   )
                 else
                   ...sessionProvider.sessions.map((session) {
-                    String status = session.status ?? 'unknown'; // Get status from session
+                    String status =
+                        session.status ?? 'unknown'; // Get status from session
 
                     Color chipColor;
                     FaIcon icon;
@@ -87,27 +87,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     switch (status.toLowerCase()) {
                       case 'scheduled':
                         chipColor = AppColors.primary; // Color for scheduled
-                        icon = FaIcon(FontAwesomeIcons.calendar, color: Colors.white);
+                        icon = FaIcon(
+                          FontAwesomeIcons.calendar,
+                          color: Colors.white,
+                        );
                         labelText = 'Scheduled';
                         break;
                       case 'ongoing':
                         chipColor = AppColors.success; // Color for ongoing
-                        icon = FaIcon(FontAwesomeIcons.play, color: Colors.white);
+                        icon = FaIcon(
+                          FontAwesomeIcons.play,
+                          color: Colors.white,
+                        );
                         labelText = 'Ongoing';
                         break;
                       case 'ended':
                         chipColor = Colors.grey; // Color for ended
-                        icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                        icon = FaIcon(
+                          FontAwesomeIcons.stop,
+                          color: Colors.white,
+                        );
                         labelText = 'Ended';
                         break;
                       case 'cancelled':
                         chipColor = Colors.red; // Color for cancelled
-                        icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                        icon = FaIcon(
+                          FontAwesomeIcons.stop,
+                          color: Colors.white,
+                        );
                         labelText = 'Cancelled';
                         break;
                       default:
-                        chipColor = Colors.grey; // Default color for unknown status
-                        icon = FaIcon(FontAwesomeIcons.question, color: Colors.white);
+                        chipColor =
+                            Colors.grey; // Default color for unknown status
+                        icon = FaIcon(
+                          FontAwesomeIcons.question,
+                          color: Colors.white,
+                        );
                         labelText = 'Unknown';
                         break;
                     }
@@ -130,10 +146,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                                 Chip(
-                                  label: Text(labelText, style: TextStyle(color: Colors.white)),
+                                  label: Text(
+                                    labelText,
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                   avatar: icon,
                                   backgroundColor: chipColor,
-                                )
+                                ),
                               ],
                             ),
                             const SizedBox(height: 10),
@@ -142,47 +161,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(height: 5),
                             Text("Location: ${session.location ?? 'Unknown'}"),
+                            
                             const SizedBox(height: 15),
-                            isLoading
-                                ? const Center(child: CircularProgressIndicator())
-                                : 
                             ElevatedButton(
-                              onPressed: session.checkin_status == 'yes' ? null : () async {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                if (status.toLowerCase() == 'ongoing') {
-                                  final message = await location.getCurrentLocation(session.id);
-                                  print(message.toString());
-                                  if (message == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Check-in successful')),
-                                    );
-                                  } else{
-                                    showSnackBar(context, message.toString(), AppColors.error);
-                                  }
-                                  location.todaySession;
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Cannot check in for $status session')),
-                                  );
-                                }
-                              },
+                              onPressed:
+                                  session.checkin_status == 'yes'
+                                      ? null
+                                      : () async {
+                                        setState(() {
+                                          print("inside loader");
+                                          isLoading =
+                                              true; // Show the loader when the button is pressed
+                                        });
+
+                                        if (status.toLowerCase() == 'ongoing') {
+                                          final message = await location
+                                              .getCurrentLocation(session.id);
+                                          print(message.toString());
+
+                                          if (message == null) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Check-in successful',
+                                                ),
+                                              ),
+                                            );
+                                          } else {
+                                            showSnackBar(
+                                              context,
+                                              message.toString(),
+                                              AppColors.error,
+                                            );
+                                          }
+
+                                          location.todaySession;
+
+                                          setState(() {
+                                            isLoading = false;
+                                          });
+                                        } else {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Cannot check in for $status session',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                               ),
-                              child: Text(
-                                'CheckIn',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            )
+                              child:
+                                  isLoading
+                                      ? Center(
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ) 
+                                      : Text(
+                                        'CheckIn',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                            ),
                           ],
                         ),
                       ),
