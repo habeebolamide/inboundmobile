@@ -273,11 +273,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 IconButton.filled(
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.remove('token');
-                    context.router.replace(const LoginRoute());
-                  },
+                 onPressed: (){
+                    context.router.push(const CreateSessionRoute());
+                 },
                   icon: const FaIcon(
                     FontAwesomeIcons.plus,
                     color: Colors.white,

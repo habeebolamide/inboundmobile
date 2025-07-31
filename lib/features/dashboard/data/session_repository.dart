@@ -9,11 +9,13 @@ class SessionRepository {
   final geolocation = GeolocationService();
 
   Future<List<SessionModel>> fetchSessions() async {
-    final response = await _api.get('/v1/organization/sessions');
+    final response = await _api.get('/v1/organization/sessions/get_sessions');
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as List;
-      return data.map((json) => SessionModel.fromJson(json)).toList();
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      final List<dynamic> sessionsData = data['data'];
+      return sessionsData.map((json) => SessionModel.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load sessions');
     }

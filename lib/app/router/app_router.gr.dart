@@ -11,6 +11,22 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [CreateSessionScreen]
+class CreateSessionRoute extends PageRouteInfo<void> {
+  const CreateSessionRoute({List<PageRouteInfo>? children})
+    : super(CreateSessionRoute.name, initialChildren: children);
+
+  static const String name = 'CreateSessionRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const CreateSessionScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [DashboardScreen]
 class DashboardRoute extends PageRouteInfo<void> {
   const DashboardRoute({List<PageRouteInfo>? children})
