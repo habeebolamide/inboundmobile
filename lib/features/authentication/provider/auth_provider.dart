@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/auth_repository.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -27,5 +30,16 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners(); 
     }
+  }
+
+  Future<bool> isSupervisor() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? userData = prefs.getString('userData') ?? '';
+    Map<String, dynamic>? _user = jsonDecode(userData);
+    
+    if (_user?['user_type_id'] == 3) {
+      return true;
+    }
+    return false;
   }
 }

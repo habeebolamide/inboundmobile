@@ -5,6 +5,7 @@ import 'package:inboundmobile/app/router/app_router.dart';
 import 'package:inboundmobile/core/constants/app_colors.dart';
 import 'package:inboundmobile/core/helpers/%20snackbar_helper.dart';
 import 'package:inboundmobile/core/helpers/loader_utils.dart';
+import 'package:inboundmobile/features/authentication/provider/auth_provider.dart';
 import 'package:inboundmobile/features/dashboard/data/session_repository.dart';
 import 'package:inboundmobile/features/dashboard/provider/session_provider.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +24,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late double _deviceHeight;
   late double _deviceWidth;
   bool isLoading = false;
+  bool isSupervisor = false; // Track if the user is a supervisor
   final location = SessionRepository();
+  final authprovider = AuthProvider();
   String formattedDate() {
     final now = DateTime.now();
     return DateFormat('EEEE, MMMM d, y').format(now);
@@ -34,8 +37,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   @override
-  void initState() {
+  void initState() async{
     super.initState();
+    isSupervisor = await authprovider.isSupervisor();
     Future.microtask(() {
       Provider.of<SessionProvider>(context, listen: false).todaySession();
     });
@@ -169,14 +173,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ? null
                                       : () async {
                                         setState(() {
-                                          print("inside loader");
                                           isLoading =
                                               true; // Show the loader when the button is pressed
                                         });
 
                                         if (status.toLowerCase() == 'ongoing') {
                                           final message = await location
-                                              .getCurrentLocation(session.id);
+                                              .getCurrentLocation(session.id ?? 0);
 
                                           if (message == null) {
                                             showSnackBar(
@@ -272,8 +275,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
+                if (isSupervisor)
                 IconButton.filled(
-                 onPressed: (){
+                 onPressed: () async{
+                  // final SharedPreferences prefs = await SharedPreferences.getInstance();
+                  // prefs.clear();
+                  // context.router.replace(LoginRoute());
                     context.router.push(const CreateSessionRoute());
                  },
                   icon: const FaIcon(

@@ -51,4 +51,25 @@ class SessionRepository {
     }
   }
 
+  Future<String?> createSession(SessionModel session) async {
+    final data = {
+      'group_id': session.groupId,
+      'title': session.title,
+      'radius': session.radius,
+      'building_name': session.location,
+      'start_time': session.startTime?.toIso8601String(),
+      'end_time': session.endTime?.toIso8601String(),
+      'latitude': session.latitude,
+      'longitude': session.longitude
+    };
+
+    final response = await _api.post('/v1/organization/sessions/supervisor_create', body: data);
+    if (response.statusCode == 201) {
+      return null;
+    } else {
+      print(response.body);
+      return jsonDecode(response.body)['message'] ?? 'An Error Occured';
+    }
+  }
+
 }

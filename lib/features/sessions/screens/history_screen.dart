@@ -120,7 +120,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: 20,
-                          vertical: 10,
+                          vertical: 20,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,

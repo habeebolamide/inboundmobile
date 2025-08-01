@@ -15,6 +15,10 @@ class AuthRepository {
       final data = jsonDecode(response.body);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['data']['token']); // Save token
+       await prefs.setString(
+            'userData',
+            jsonEncode(data['data']['user']),
+          );
       return null;
     } else {
       // print('Login failed: ${response.body}');
