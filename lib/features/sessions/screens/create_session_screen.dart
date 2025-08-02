@@ -144,7 +144,7 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
         child: Container(
           padding: const EdgeInsets.all(20),
           
-          child: _createloading ? CustomLoader() : Form(
+          child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -274,7 +274,7 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                       });
                       final message = await _session.createSession(_form);
                       if (message != null) {
-                        showSnackBar(context, message.toString(), AppColors.error);
+                        return showSnackBar(context, message.toString(), AppColors.error);
                       }
                       showSnackBar(context, 'Session Created', AppColors.success);
                       setState(() {

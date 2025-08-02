@@ -34,12 +34,17 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> isSupervisor() async {
     final prefs = await SharedPreferences.getInstance();
-    String? userData = prefs.getString('userData') ?? '';
-    Map<String, dynamic>? _user = jsonDecode(userData);
-    
-    if (_user?['user_type_id'] == 3) {
-      return true;
+    String? userData = prefs.getString('userData') ?? null;
+    // print('User Data: $userData');
+    if (userData != null && userData.isNotEmpty) {
+      final Map<String, dynamic>? _user = jsonDecode(userData);
+      
+      if (_user?['user_type_id'] == 3) {
+        return true;
+      }
+      return false; 
+    } else {
+      return false;
     }
-    return false;
   }
 }

@@ -42,21 +42,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
       showSnackBar(context, e.toString(), AppColors.error);
     }
   }
+
   String formattedSDate(time) {
     return DateFormat('h:mm a').format(time);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Session History')),
-      body:
-          isLoading
-              ? const CustomLoader()
-              : sessionList.isEmpty
-              ? const Center(child: Text('No sessions found'))
-              : RefreshIndicator(
-                onRefresh: _loadSessions,
-                child: ListView.builder(
+      appBar: AppBar(title: Text('Session History')),
+      body: RefreshIndicator(
+        onRefresh: _loadSessions,
+        child:
+            isLoading
+                ? const CustomLoader() // Display loader while loading
+                : sessionList.isEmpty
+                ? const Center(
+                  child: Text('No sessions found'),
+                ) // Display no sessions message
+                : ListView.builder(
                   padding: const EdgeInsets.all(8.0),
                   itemCount: sessionList.length,
                   itemBuilder: (context, index) {
@@ -120,7 +124,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: 20,
-                          vertical: 20,
+                          vertical: 10,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -146,20 +150,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ],
                             ),
                             const SizedBox(height: 10),
-                                Text(
-                                  "Time: ${formattedSDate(session.startTime)} - ${formattedSDate(session.endTime)}",
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  "Location: ${session.location ?? 'Unknown'}",
-                                ),
+                            Text(
+                              "Time: ${formattedSDate(session.startTime)} - ${formattedSDate(session.endTime)}",
+                            ),
+                            const SizedBox(height: 5),
+                            Text("Location: ${session.location ?? 'Unknown'}"),
                           ],
                         ),
                       ),
                     );
                   },
                 ),
-              ),
+      ),
     );
   }
 }

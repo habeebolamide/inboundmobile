@@ -63,12 +63,15 @@ class SessionRepository {
       'longitude': session.longitude
     };
 
-    final response = await _api.post('/v1/organization/sessions/supervisor_create', body: data);
-    if (response.statusCode == 201) {
-      return null;
-    } else {
-      print(response.body);
-      return jsonDecode(response.body)['message'] ?? 'An Error Occured';
+    try {
+       final response = await _api.post('/v1/organization/sessions/supervisor_create', body: data);
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+        return null;
+    } catch (e) {
+      print('Error creating session: $e');
+      return 'An error occurred while creating the session';
+      
     }
   }
 

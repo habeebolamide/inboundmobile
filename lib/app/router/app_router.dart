@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:inboundmobile/features/authentication/screens/login_screen.dart';
 import 'package:inboundmobile/features/dashboard/screens/dashboard_screen.dart';
+import 'package:inboundmobile/features/profile/screens/profile_screen.dart';
 import 'package:inboundmobile/features/sessions/screens/create_session_screen.dart';
 import 'package:inboundmobile/features/sessions/screens/history_screen.dart';
 import 'package:inboundmobile/features/splash/screen/splash_screen.dart';
@@ -26,6 +27,7 @@ class AppRouter extends RootStackRouter {
       children: [
         AutoRoute(path: 'dashboard', page: DashboardRoute.page,initial: true),
         AutoRoute(path: 'history', page: HistoryRoute.page),
+        AutoRoute(path: 'profile', page: ProfileRoute.page),
       ],
     ),
 

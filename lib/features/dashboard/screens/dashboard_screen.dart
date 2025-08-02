@@ -24,9 +24,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late double _deviceHeight;
   late double _deviceWidth;
   bool isLoading = false;
-  bool isSupervisor = false; // Track if the user is a supervisor
   final location = SessionRepository();
   final authprovider = AuthProvider();
+  bool _isSupervisor = false;
+
   String formattedDate() {
     final now = DateTime.now();
     return DateFormat('EEEE, MMMM d, y').format(now);
@@ -35,11 +36,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String formattedSDate(time) {
     return DateFormat('h:mm a').format(time);
   }
+  
+   void checkSupervisorStatus() async {
+      _isSupervisor = await authprovider.isSupervisor();
+      setState(() {});  // Trigger a rebuild when the status is fetched
+    }
 
   @override
-  void initState() async{
+  void initState(){
     super.initState();
-    isSupervisor = await authprovider.isSupervisor();
+    checkSupervisorStatus();
     Future.microtask(() {
       Provider.of<SessionProvider>(context, listen: false).todaySession();
     });
@@ -275,7 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                if (isSupervisor)
+                if (_isSupervisor)
                 IconButton.filled(
                  onPressed: () async{
                   // final SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -15,7 +15,7 @@ class _LayoutScreenState extends State<LayoutScreen> {
   @override
   Widget build(BuildContext context) {
     return AutoTabsRouter(
-      routes: [DashboardRoute(), HistoryRoute()],
+      routes: [DashboardRoute(), HistoryRoute(),ProfileRoute()],
 
       builder: (context, child) {
         final tabsRouter = AutoTabsRouter.of(context);
@@ -38,6 +38,10 @@ class _LayoutScreenState extends State<LayoutScreen> {
               BottomNavigationBarItem(
                 icon: FaIcon(FontAwesomeIcons.clock),
                 label: 'History',
+              ),
+              BottomNavigationBarItem(
+                icon: FaIcon(FontAwesomeIcons.user),
+                label: 'Profile',
               ),
             ],
           ),
