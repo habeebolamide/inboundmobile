@@ -86,4 +86,22 @@ class SessionRepository {
     }
   }
 
+  Future<String?> endSession(int sessionId) async {
+    final response = await _api.post('/v1/organization/sessions/end_session', body: {'sessionId': sessionId});
+    
+    if (response.statusCode == 200) {
+      return null;
+    } else {
+      return jsonDecode(response.body)['message'] ?? 'An error occurred while ending the session';
+    }
+  }
+  Future<String?> startSession(int sessionId) async {
+    final response = await _api.post('/v1/organization/sessions/start_session', body: {'sessionId': sessionId});
+    
+    if (response.statusCode == 200) {
+      return null;
+    } else {
+      return jsonDecode(response.body)['message'] ?? 'An error occurred while ending the session';
+    }
+  }
 }

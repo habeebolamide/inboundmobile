@@ -28,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late double _deviceWidth;
   bool isLoading = false;
   final location = SessionRepository();
+  Map<int, bool> sessionLoading = {};
   final authprovider = AuthProvider();
   bool _isSupervisor = false;
   List<SessionModel> sessionList = []; // Store fetched sessions
@@ -63,6 +64,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _onRefresh() async {
+    await _loadSessions();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -86,24 +91,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _topLayerWidget(),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: _deviceWidth * 0.05,
+          RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _topLayerWidget(),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _deviceWidth * 0.05,
+                    ),
+                    child: const Text(
+                      "Today's Sessions",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  child: const Text(
-                    "Today's Sessions",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                if (_isSupervisor) _supervisorSessionWidget(),
-                if (!_isSupervisor) _memberSessionWidget(sessionProvider),
-              ],
+                  if (_isSupervisor) _supervisorSessionWidget(),
+                  if (!_isSupervisor) _memberSessionWidget(sessionProvider),
+                ],
+              ),
             ),
           ),
         ],
@@ -415,27 +426,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 5),
                     Text("Location: ${session.location ?? 'Unknown'}"),
                     const SizedBox(height: 15),
-                    ElevatedButton(
-                      onPressed: (){},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: session.status == "scheduled" ? AppColors.success : AppColors.error,
+                    if (session.status == "scheduled" ||
+                        session.status == "ongoing")
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            sessionLoading[session.id ?? 0] =
+                                true; // Show loader for specific session
+                          });
+
+                          if (session.status == "scheduled") {
+                            location.startSession(session.id ?? 0).then((
+                              message,
+                            ) {
+                              if (message == null) {
+                                showSnackBar(
+                                  context,
+                                  "Session started successfully",
+                                  AppColors.success,
+                                );
+                                _loadSessions(); // Refresh session list
+                              } else {
+                                showSnackBar(
+                                  context,
+                                  message.toString(),
+                                  AppColors.error,
+                                );
+                              }
+                              setState(() {
+                                sessionLoading[session.id ?? 0] =
+                                    false; // Hide loader
+                              });
+                            });
+                          } else if (session.status == "ongoing") {
+                            location.endSession(session.id ?? 0).then((
+                              message,
+                            ) {
+                              if (message == null) {
+                                showSnackBar(
+                                  context,
+                                  "Session ended successfully",
+                                  AppColors.success,
+                                );
+                                _loadSessions(); // Refresh session list
+                              } else {
+                                showSnackBar(
+                                  context,
+                                  message.toString(),
+                                  AppColors.error,
+                                );
+                              }
+                              setState(() {
+                                sessionLoading[session.id ?? 0] =
+                                    false; // Hide loader
+                              });
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              session.status == "scheduled"
+                                  ? AppColors.success
+                                  : AppColors.error,
+                        ),
+                        child:
+                            sessionLoading[session.id ?? 0] == true
+                                ? Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                )
+                                : Text(
+                                  session.status == "scheduled"
+                                      ? 'Start Session'
+                                      : 'End Session',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                       ),
-                      child:
-                          isLoading
-                              ? Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                ),
-                              )
-                              : Text(
-                                session.status == "scheduled" ? 'Start Session' : 'End Session',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                    ),
                   ],
                 ),
               ),
