@@ -75,4 +75,15 @@ class SessionRepository {
     }
   }
 
+  Future<List<SessionModel>> fetchSupervisorSessions() async {
+    final response = await _api.get('/v1/organization/sessions/get_sessions_for_supervisors');
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final List<dynamic> sessionsData = data['data'];
+      return sessionsData.map((json) => SessionModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load supervisor sessions');
+    }
+  }
+
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,6 +9,7 @@ import 'package:inboundmobile/core/helpers/%20snackbar_helper.dart';
 import 'package:inboundmobile/core/helpers/loader_utils.dart';
 import 'package:inboundmobile/features/authentication/provider/auth_provider.dart';
 import 'package:inboundmobile/features/dashboard/data/session_repository.dart';
+import 'package:inboundmobile/features/dashboard/model/session_model.dart';
 import 'package:inboundmobile/features/dashboard/provider/session_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final location = SessionRepository();
   final authprovider = AuthProvider();
   bool _isSupervisor = false;
+  List<SessionModel> sessionList = []; // Store fetched sessions
 
   String formattedDate() {
     final now = DateTime.now();
@@ -36,16 +40,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String formattedSDate(time) {
     return DateFormat('h:mm a').format(time);
   }
-  
-   void checkSupervisorStatus() async {
-      _isSupervisor = await authprovider.isSupervisor();
-      setState(() {});  // Trigger a rebuild when the status is fetched
+
+  void checkSupervisorStatus() async {
+    _isSupervisor = await authprovider.isSupervisor();
+    setState(() {}); // Trigger a rebuild when the status is fetched
+  }
+
+  Future<void> _loadSessions() async {
+    try {
+      final fetchedSessions = await location.fetchSupervisorSessions();
+      setState(() {
+        sessionList = fetchedSessions;
+        print("Response: $sessionList");
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error: $e');
+      setState(() {
+        isLoading = false;
+      });
+      showSnackBar(context, e.toString(), AppColors.error);
     }
+  }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     checkSupervisorStatus();
+    _loadSessions();
     Future.microtask(() {
       Provider.of<SessionProvider>(context, listen: false).todaySession();
     });
@@ -79,168 +101,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
-                if (sessionProvider.sessions.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(child: Text("No sessions available.")),
-                  )
-                else
-                  ...sessionProvider.sessions.map((session) {
-                    String status =
-                        session.status ?? 'unknown'; // Get status from session
-
-                    Color chipColor;
-                    FaIcon icon;
-                    String labelText;
-
-                    // Determine chip properties based on session status
-                    switch (status.toLowerCase()) {
-                      case 'scheduled':
-                        chipColor = AppColors.primary; // Color for scheduled
-                        icon = FaIcon(
-                          FontAwesomeIcons.calendar,
-                          color: Colors.white,
-                        );
-                        labelText = 'Scheduled';
-                        break;
-                      case 'ongoing':
-                        chipColor = AppColors.success; // Color for ongoing
-                        icon = FaIcon(
-                          FontAwesomeIcons.play,
-                          color: Colors.white,
-                        );
-                        labelText = 'Ongoing';
-                        break;
-                      case 'ended':
-                        chipColor = Colors.grey; // Color for ended
-                        icon = FaIcon(
-                          FontAwesomeIcons.stop,
-                          color: Colors.white,
-                        );
-                        labelText = 'Ended';
-                        break;
-                      case 'cancelled':
-                        chipColor = Colors.red; // Color for cancelled
-                        icon = FaIcon(
-                          FontAwesomeIcons.stop,
-                          color: Colors.white,
-                        );
-                        labelText = 'Cancelled';
-                        break;
-                      default:
-                        chipColor =
-                            Colors.grey; // Default color for unknown status
-                        icon = FaIcon(
-                          FontAwesomeIcons.question,
-                          color: Colors.white,
-                        );
-                        labelText = 'Unknown';
-                        break;
-                    }
-
-                    return Card(
-                      margin: EdgeInsets.all(_deviceWidth * 0.05),
-                      child: Padding(
-                        padding: EdgeInsets.all(_deviceWidth * 0.05),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  session.title ?? 'Untitled',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Chip(
-                                  label: Text(
-                                    labelText,
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  avatar: icon,
-                                  backgroundColor: chipColor,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "Time: ${formattedSDate(session.startTime)} - ${formattedSDate(session.endTime)}",
-                            ),
-                            const SizedBox(height: 5),
-                            Text("Location: ${session.location ?? 'Unknown'}"),
-                            
-                            const SizedBox(height: 15),
-                            ElevatedButton(
-                              onPressed:
-                                  session.checkin_status == 'yes'
-                                      ? null
-                                      : () async {
-                                        setState(() {
-                                          isLoading =
-                                              true; // Show the loader when the button is pressed
-                                        });
-
-                                        if (status.toLowerCase() == 'ongoing') {
-                                          final message = await location
-                                              .getCurrentLocation(session.id ?? 0);
-
-                                          if (message == null) {
-                                            showSnackBar(
-                                              context,
-                                              "Checked in successfully",
-                                              AppColors.success,
-                                            );
-                                            sessionProvider.todaySession();
-                                          } else {
-                                            showSnackBar(
-                                              context,
-                                              message.toString(),
-                                              AppColors.error,
-                                            );
-                                          }
-                                          setState(() {
-                                            isLoading = false;
-                                          });
-
-                                        } else {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Cannot check in for $status session',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                              ),
-                              child:
-                                  isLoading
-                                      ? Center(
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                        ),
-                                      ) 
-                                      : Text(
-                                        'CheckIn',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                if (_isSupervisor) _supervisorSessionWidget(),
+                if (!_isSupervisor) _memberSessionWidget(sessionProvider),
               ],
             ),
           ),
@@ -282,25 +144,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 if (_isSupervisor)
-                IconButton.filled(
-                 onPressed: () async{
-                  // final SharedPreferences prefs = await SharedPreferences.getInstance();
-                  // prefs.clear();
-                  // context.router.replace(LoginRoute());
-                    context.router.push(const CreateSessionRoute());
-                 },
-                  icon: const FaIcon(
-                    FontAwesomeIcons.plus,
-                    color: Colors.white,
-                    size: 25,
-                  ),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
+                  IconButton.filled(
+                    onPressed: () async {
+                      // final SharedPreferences prefs = await SharedPreferences.getInstance();
+                      // prefs.clear();
+                      // context.router.replace(LoginRoute());
+                      context.router.push(const CreateSessionRoute());
+                    },
+                    icon: const FaIcon(
+                      FontAwesomeIcons.plus,
+                      color: Colors.white,
+                      size: 25,
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             Row(
@@ -318,6 +180,267 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _memberSessionWidget(SessionProvider sessionProvider) {
+    if (sessionProvider.sessions.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Center(child: Text("No sessions available.")),
+      );
+    }
+
+    // If there are sessions, return the list of widgets
+    return Column(
+      children:
+          sessionProvider.sessions.map((session) {
+            String status =
+                session.status ?? 'unknown'; // Get status from session
+
+            Color chipColor;
+            FaIcon icon;
+            String labelText;
+
+            // Determine chip properties based on session status
+            switch (status.toLowerCase()) {
+              case 'scheduled':
+                chipColor = AppColors.primary; // Color for scheduled
+                icon = FaIcon(FontAwesomeIcons.calendar, color: Colors.white);
+                labelText = 'Scheduled';
+                break;
+              case 'ongoing':
+                chipColor = AppColors.success; // Color for ongoing
+                icon = FaIcon(FontAwesomeIcons.play, color: Colors.white);
+                labelText = 'Ongoing';
+                break;
+              case 'ended':
+                chipColor = Colors.grey; // Color for ended
+                icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                labelText = 'Ended';
+                break;
+              case 'cancelled':
+                chipColor = Colors.red; // Color for cancelled
+                icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                labelText = 'Cancelled';
+                break;
+              default:
+                chipColor = Colors.grey; // Default color for unknown status
+                icon = FaIcon(FontAwesomeIcons.question, color: Colors.white);
+                labelText = 'Unknown';
+                break;
+            }
+
+            return Card(
+              margin: EdgeInsets.all(_deviceWidth * 0.05),
+              child: Padding(
+                padding: EdgeInsets.all(_deviceWidth * 0.05),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          session.title ?? 'Untitled',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Chip(
+                          label: Text(
+                            labelText,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          avatar: icon,
+                          backgroundColor: chipColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Time: ${formattedSDate(session.startTime)} - ${formattedSDate(session.endTime)}",
+                    ),
+                    const SizedBox(height: 5),
+                    Text("Location: ${session.location ?? 'Unknown'}"),
+                    const SizedBox(height: 15),
+                    ElevatedButton(
+                      onPressed:
+                          session.checkin_status == 'yes' ||
+                                  status.toLowerCase() != 'ongoing'
+                              ? null
+                              : () async {
+                                setState(() {
+                                  isLoading =
+                                      true; // Show the loader when the button is pressed
+                                });
+
+                                if (status.toLowerCase() == 'ongoing') {
+                                  final message = await location
+                                      .getCurrentLocation(session.id ?? 0);
+
+                                  if (message == null) {
+                                    showSnackBar(
+                                      context,
+                                      "Checked in successfully",
+                                      AppColors.success,
+                                    );
+                                    sessionProvider.todaySession();
+                                  } else {
+                                    showSnackBar(
+                                      context,
+                                      message.toString(),
+                                      AppColors.error,
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Cannot check in for $status session',
+                                      ),
+                                    ),
+                                  );
+                                }
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                      ),
+                      child:
+                          isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                              : Text(
+                                'CheckIn',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _supervisorSessionWidget() {
+    if (sessionList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Center(child: Text("No supervisor sessions available.")),
+      );
+    }
+
+    return Column(
+      children:
+          sessionList.map((session) {
+            String status =
+                session.status ?? 'unknown'; // Get status from session
+
+            Color chipColor;
+            FaIcon icon;
+            String labelText;
+
+            // Determine chip properties based on session status
+            switch (status.toLowerCase()) {
+              case 'scheduled':
+                chipColor = AppColors.primary; // Color for scheduled
+                icon = FaIcon(FontAwesomeIcons.calendar, color: Colors.white);
+                labelText = 'Scheduled';
+                break;
+              case 'ongoing':
+                chipColor = AppColors.success; // Color for ongoing
+                icon = FaIcon(FontAwesomeIcons.play, color: Colors.white);
+                labelText = 'Ongoing';
+                break;
+              case 'ended':
+                chipColor = Colors.grey; // Color for ended
+                icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                labelText = 'Ended';
+                break;
+              case 'cancelled':
+                chipColor = Colors.red; // Color for cancelled
+                icon = FaIcon(FontAwesomeIcons.stop, color: Colors.white);
+                labelText = 'Cancelled';
+                break;
+              default:
+                chipColor = Colors.grey; // Default color for unknown status
+                icon = FaIcon(FontAwesomeIcons.question, color: Colors.white);
+                labelText = 'Unknown';
+                break;
+            }
+
+            return Card(
+              margin: EdgeInsets.all(_deviceWidth * 0.05),
+              child: Padding(
+                padding: EdgeInsets.all(_deviceWidth * 0.05),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          session.title ?? 'Untitled',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Chip(
+                          label: Text(
+                            labelText,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          avatar: icon,
+                          backgroundColor: chipColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Time: ${formattedSDate(session.startTime)} - ${formattedSDate(session.endTime)}",
+                    ),
+                    const SizedBox(height: 5),
+                    Text("Location: ${session.location ?? 'Unknown'}"),
+                    const SizedBox(height: 15),
+                    ElevatedButton(
+                      onPressed: (){},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: session.status == "scheduled" ? AppColors.success : AppColors.error,
+                      ),
+                      child:
+                          isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                              : Text(
+                                session.status == "scheduled" ? 'Start Session' : 'End Session',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
     );
   }
 }
