@@ -18,31 +18,26 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repo.login(
-        email,
-        password,
-      );
+      await _repo.login(email, password);
       _isLoggedIn = true;
       return null;
     } catch (e) {
       return e.toString();
     } finally {
       _isLoading = false;
-      notifyListeners(); 
+      notifyListeners();
     }
   }
 
   Future<bool> isSupervisor() async {
     final prefs = await SharedPreferences.getInstance();
     String? userData = prefs.getString('userData') ?? null;
-    // print('User Data: $userData');
     if (userData != null && userData.isNotEmpty) {
       final Map<String, dynamic>? _user = jsonDecode(userData);
-      
-      if (_user?['user_type_id'] == 3) {
+      if (_user?['role'] == 'supervisor') {
         return true;
       }
-      return false; 
+      return false;
     } else {
       return false;
     }

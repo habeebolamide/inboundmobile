@@ -1,6 +1,6 @@
 class SessionModel {
-  int? id;
-  int? groupId;
+  String? id;
+  String? group;
   int? radius;
   String? title;
   String? location;
@@ -13,7 +13,7 @@ class SessionModel {
 
   SessionModel({
     this.id,
-    this.groupId,
+    this.group,
     this.radius,
     this.title,
     this.checkin_status,
@@ -27,8 +27,8 @@ class SessionModel {
 
   factory SessionModel.fromJson(Map<String, dynamic> json) {
     return SessionModel(
-      id: json['id'],
-      groupId: json['group_id'],
+      id: json['_id'],
+      group: json['group'],
       title: json['title'],
       radius: json['radius'],
       location: json['building_name'],

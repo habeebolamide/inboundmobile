@@ -55,11 +55,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         onRefresh: _loadSessions,
         child:
             isLoading
-                ? const CustomLoader() // Display loader while loading
+                ? const CustomLoader()
                 : sessionList.isEmpty
-                ? const Center(
-                  child: Text('No sessions found'),
-                ) // Display no sessions message
+                ? const Center(child: Text('No sessions found'))
                 : ListView.builder(
                   padding: const EdgeInsets.all(8.0),
                   itemCount: sessionList.length,
@@ -132,11 +130,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  session.title ?? 'Untitled',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
+                                Expanded(
+                                  child: Text(
+                                    session.title ?? 'Untitled',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 Chip(

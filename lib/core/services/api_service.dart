@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_route/auto_route.dart';
 
 class ApiService {
-  final String baseUrl = dotenv.env['BASE_URL'] ?? 'default_url';
+  final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://nodejsinboundapi.onrender.com/api';
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();

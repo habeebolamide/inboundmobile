@@ -4,6 +4,7 @@ import 'package:inboundmobile/core/services/api_service.dart';
 import 'package:inboundmobile/core/services/geolocation_service.dart';
 import 'package:inboundmobile/features/dashboard/model/session_model.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+
 class SessionRepository {
   final _api = ApiService();
   final geolocation = GeolocationService();
@@ -22,7 +23,9 @@ class SessionRepository {
   }
 
   Future<List<SessionModel>> todaySession() async {
-    final response = await _api.get('/v1/organization/sessions/get_today_sessions');
+    final response = await _api.get(
+      '/v1/organization/sessions/get_today_sessions',
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body)['data'] as List;
       final check = data.map((json) => SessionModel.fromJson(json)).toList();
@@ -37,46 +40,70 @@ class SessionRepository {
     // final String location = await FlutterTimezone.getLocalTimezone();
     // print("Available Timezones: $location");
     final data = {
-      "sessionId":sessionId,
-      "latitude":position.latitude,
-      "longitude":position.longitude
+      "sessionId": sessionId,
+      "latitude": position.latitude,
+      "longitude": position.longitude,
     };
 
-    final response = await _api.post('/v1/organization/sessions/checkin',body: data);
-    print('Response body: ${response.body}');
+    final response = await _api.post(
+      '/v1/organization/sessions/checkin',
+      body: data,
+    );
     if (response.statusCode == 200) {
       return null;
-    }else{
+    } else {
       return jsonDecode(response.body)['message'] ?? 'An Error Occured';
     }
   }
 
   Future<String?> createSession(SessionModel session) async {
     final data = {
-      'group_id': session.groupId,
+      'group': session.group,
       'title': session.title,
       'radius': session.radius,
       'building_name': session.location,
       'start_time': session.startTime?.toIso8601String(),
       'end_time': session.endTime?.toIso8601String(),
       'latitude': session.latitude,
-      'longitude': session.longitude
+      'longitude': session.longitude,
     };
 
     try {
-       final response = await _api.post('/v1/organization/sessions/supervisor_create', body: data);
+      final response = await _api.post(
+        '/v1/organization/sessions/supervisor_create',
+        body: data,
+      );
+
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-        return null;
+
+      if (response.statusCode >= 400) {
+        final errorMessage = _extractErrorMessage(response.body);
+        return errorMessage ??
+            'Failed to create session (HTTP ${response.statusCode})';
+      }
+
+      return null; // or return success message / session ID
     } catch (e) {
-      print('Error creating session: $e');
-      return 'An error occurred while creating the session';
-      
+      print('Network or unexpected error: $e');
+      return 'Network error. Please check your connection and try again.';
+    }
+  }
+
+  // Helper to parse common error formats
+  String? _extractErrorMessage(String body) {
+    try {
+      final Map<String, dynamic> json = jsonDecode(body);
+      return json['message'] ?? json['error'] ?? json['detail'];
+    } catch (_) {
+      return null;
     }
   }
 
   Future<List<SessionModel>> fetchSupervisorSessions() async {
-    final response = await _api.get('/v1/organization/sessions/get_sessions_for_supervisors');
+    final response = await _api.get(
+      '/v1/organization/sessions/get_sessions_for_supervisors',
+    );
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final List<dynamic> sessionsData = data['data'];
@@ -87,21 +114,30 @@ class SessionRepository {
   }
 
   Future<String?> endSession(int sessionId) async {
-    final response = await _api.post('/v1/organization/sessions/end_session', body: {'sessionId': sessionId});
-    
+    final response = await _api.post(
+      '/v1/organization/sessions/end_session',
+      body: {'sessionId': sessionId},
+    );
+
     if (response.statusCode == 200) {
       return null;
     } else {
-      return jsonDecode(response.body)['message'] ?? 'An error occurred while ending the session';
+      return jsonDecode(response.body)['message'] ??
+          'An error occurred while ending the session';
     }
   }
+
   Future<String?> startSession(int sessionId) async {
-    final response = await _api.post('/v1/organization/sessions/start_session', body: {'sessionId': sessionId});
-    
+    final response = await _api.post(
+      '/v1/organization/sessions/start_session',
+      body: {'sessionId': sessionId},
+    );
+
     if (response.statusCode == 200) {
       return null;
     } else {
-      return jsonDecode(response.body)['message'] ?? 'An error occurred while ending the session';
+      return jsonDecode(response.body)['message'] ??
+          'An error occurred while ending the session';
     }
   }
 }

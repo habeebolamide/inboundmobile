@@ -164,17 +164,17 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 ),
                 SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: selectedGroup ?? _form.groupId?.toString(),
+                  value: selectedGroup ?? _form.group?.toString(),
                   decoration: InputDecoration(labelText: 'Group'),
                   items: groups.map((group) {
                     return DropdownMenuItem<String>(
-                      value: group['id'].toString(),
+                      value: group['_id'].toString(),
                       child: Text(group['name']),
                     );
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _form.groupId = int.tryParse(value ?? '');
+                      _form.group = value ?? '';
                       selectedGroup = value;
                     });
                   },
@@ -262,7 +262,7 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 SizedBox(height: 25),
                 ElevatedButton(
                   onPressed: _getCurrentLocation,
-                  child: Text('Use Current Location'),
+                  child: Text('Use Current Location',style: TextStyle(color: AppColors.primary),),
                 ),
                 const SizedBox(height: 25),
                 ElevatedButton(
@@ -274,6 +274,9 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                       });
                       final message = await _session.createSession(_form);
                       if (message != null) {
+                        setState(() {
+                        _createloading = false;
+                      });
                         return showSnackBar(context, message.toString(), AppColors.error);
                       }
                       showSnackBar(context, 'Session Created', AppColors.success);
@@ -288,7 +291,9 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                     backgroundColor: AppColors.primary,
                   ),
                   child: _createloading
-                            ? Center(child: CircularProgressIndicator())
+                            ? Center(child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ))
                             :Text('Create Session', style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ],

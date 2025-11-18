@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:inboundmobile/app/router/app_router.dart';
+import 'package:inboundmobile/core/constants/app_colors.dart';
 
 @RoutePage()
 class LayoutScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _LayoutScreenState extends State<LayoutScreen> {
           bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
             currentIndex: tabsRouter.activeIndex,
-            selectedItemColor: const Color(0xFF6D3EDD),
+            selectedItemColor: AppColors.primary,
             unselectedItemColor: Colors.grey,
             onTap: tabsRouter.setActiveIndex,
             items: [
