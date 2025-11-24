@@ -97,6 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       time != null ? DateFormat('EEEE, h:mm a').format(time) : 'Not set';
 
   Future<void> _handleCheckIn(SessionModel session) async {
+    // return print('Check-in for session ${session.id}');
     if (session.status?.toLowerCase() != 'ongoing') {
       showSnackBar(context, "Session is not ongoing", AppColors.error);
       return;
@@ -104,9 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (session.checkin_status == 'yes') return;
 
     setState(() => _isLoading = true);
-    final result = await _sessionRepo.getCurrentLocation(
-      int.tryParse(session.id ?? '0') ?? 0,
-    );
+    final result = await _sessionRepo.CheckinToSession(session.id ?? '0');
 
     if (!mounted) return;
 
@@ -158,13 +157,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 else ...[
                   if (_isSupervisor && _assignedSessions.isNotEmpty) ...[
                     SesctionHeader(title: "My Assigned Sessions"),
-                    SessionList(sessions: _assignedSessions, isOwnedByMe: true, onCheckIn: _handleCheckIn),
+                    SessionList(sessions: _assignedSessions, isOwnedByMe: true, onCheckIn: _handleCheckIn,onRefresh: _refreshSessions),
                     const SizedBox(height: 24),
                   ],
 
                   if (_toAttendSession.isNotEmpty) ...[
                     SesctionHeader(title: "Today's Sessions"),
-                    SessionList(sessions: _toAttendSession, isOwnedByMe: false, onCheckIn: _handleCheckIn),
+                    SessionList(sessions: _toAttendSession, isOwnedByMe: false, onCheckIn: _handleCheckIn, onRefresh: _refreshSessions),
                     const SizedBox(height: 24),
                   ] else if (!_isSupervisor) ...[
                     SesctionHeader(title: "Today's Sessions"),

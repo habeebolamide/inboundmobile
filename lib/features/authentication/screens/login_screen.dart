@@ -28,11 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         padding: const EdgeInsets.all(16),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.primary, AppColors.background],
-          ),
+          color: AppColors.background,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -40,11 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Text(
               'InBound',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold,color: AppColors.primary),
             ),
             Text(
               'Smart Attendance System',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w100),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w100,color: AppColors.primary),
             ),
             const SizedBox(height: 30),
             Form(
@@ -153,7 +149,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             showSnackBar(context, message, AppColors.error);
                           } else {
                             showSnackBar(context, 'Login successful', AppColors.success);
-                            // ❗️Let the snackbar render first, then navigate
                             await Future.delayed(Duration(milliseconds: 500));
                             context.router.replace(LayoutRoute());
                           }
@@ -172,7 +167,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child:
                         auth.isLoading
-                            ? Center(child: CircularProgressIndicator())
+                            ? Center(child: CircularProgressIndicator(
+                                color: Colors.white,
+                            ))
                             : Text(
                               "Sign In",
                               style: TextStyle(

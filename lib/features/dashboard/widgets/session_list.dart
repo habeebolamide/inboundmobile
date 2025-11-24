@@ -7,12 +7,14 @@ class SessionList extends StatelessWidget {
   final List<SessionModel> sessions;
   final bool isOwnedByMe;
   final void Function(SessionModel) onCheckIn;
+  final void Function() onRefresh;
 
   const SessionList({
     super.key,
     required this.sessions,
     required this.isOwnedByMe,
     required this.onCheckIn,
+    required this.onRefresh
   });
 
   @override
@@ -25,7 +27,7 @@ class SessionList extends StatelessWidget {
       itemBuilder: (context, index) => SessionCard(
         session: sessions[index],
         isOwnedByMe: isOwnedByMe,
-        onCheckIn: () => onCheckIn(sessions[index]),
+        onRefresh: () => onRefresh(),
       ),
     );
   }

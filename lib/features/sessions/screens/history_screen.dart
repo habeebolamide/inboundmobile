@@ -44,7 +44,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   String formattedSDate(time) {
-    return DateFormat('h:mm a').format(time);
+    return DateFormat('EEE h:mm a').format(time);
   }
 
   @override

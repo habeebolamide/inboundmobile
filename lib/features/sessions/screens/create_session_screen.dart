@@ -119,11 +119,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
         _form.latitude = position.latitude;
         _form.longitude = position.longitude;
 
-        // Update the controllers with new values
         _latitudeController.text = _form.latitude.toString();
         _longitudeController.text = _form.longitude.toString();
-
-        print('Latitude: ${_form.latitude}, Longitude: ${_form.longitude}'); // Debugging
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error fetching location: $e')));

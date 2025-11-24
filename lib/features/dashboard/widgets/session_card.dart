@@ -1,28 +1,89 @@
-// lib/features/dashboard/presentation/widgets/session_card.dart
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:inboundmobile/core/constants/app_colors.dart';
+import 'package:inboundmobile/core/helpers/%20snackbar_helper.dart';
+import 'package:inboundmobile/features/dashboard/data/session_repository.dart';
 import 'package:inboundmobile/features/dashboard/model/session_model.dart';
 import 'package:intl/intl.dart';
 
-class SessionCard extends StatelessWidget {
+class SessionCard extends StatefulWidget {
   final SessionModel session;
   final bool isOwnedByMe;
-  final VoidCallback onCheckIn;
+  final VoidCallback onRefresh;
 
   const SessionCard({
     super.key,
     required this.session,
     required this.isOwnedByMe,
-    required this.onCheckIn,
+    required this.onRefresh,
   });
 
+  @override
+  State<SessionCard> createState() => _SessionCardState();
+}
+
+class _SessionCardState extends State<SessionCard> {
+  final _sessionRepo = SessionRepository();
+  bool _isLoading = false;
+
   String _formatTime(DateTime? time) =>
-      time != null ? DateFormat('h:mm a').format(time) : 'Not set';
+      time != null ? DateFormat('EEE h:mm a').format(time) : 'Not set';
+
+  Future<void> _handleStartSession() async {
+    // if (widget.session.status?.toLowerCase() != 'scheduled') return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final success = await _sessionRepo.startSession(widget.session.id ?? '');
+
+      if (!mounted) return;
+
+      if (success == null) {
+        showSnackBar(
+          context,
+          "Session started successfully!",
+          AppColors.success,
+        );
+
+        widget.onRefresh.call();
+      } else {
+        showSnackBar(context, success, AppColors.error);
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, e.toString(), AppColors.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleCheckIn(SessionModel session) async {
+    // return print('Check-in for session ${session.id}');
+    if (session.status?.toLowerCase() != 'ongoing') {
+      showSnackBar(context, "Session is not ongoing", AppColors.error);
+      return;
+    }
+    if (session.checkin_status == 'yes') return;
+
+    setState(() => _isLoading = true);
+    final result = await _sessionRepo.CheckinToSession(session.id ?? '0');
+
+    if (!mounted) return;
+
+    if (result == null) {
+      showSnackBar(context, "Checked in successfully!", AppColors.success);
+      widget.onRefresh.call();
+    } else {
+      showSnackBar(context, result.toString(), AppColors.error);
+    }
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final status = (session.status?.toLowerCase()) ?? 'unknown';
+    final status = (widget.session.status?.toLowerCase()) ?? 'unknown';
     final (chipColor, icon, label) = switch (status) {
       'scheduled' => (
         AppColors.primary,
@@ -36,7 +97,7 @@ class SessionCard extends StatelessWidget {
     };
 
     final bool canCheckIn =
-        status == 'ongoing' && session.checkin_status != 'yes';
+        status == 'ongoing' && widget.session.checkin_status != 'yes';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -51,7 +112,7 @@ class SessionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    session.title ?? 'Untitled',
+                    widget.session.title ?? 'Untitled',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -70,27 +131,42 @@ class SessionCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              "Time: ${_formatTime(session.startTime)} - ${_formatTime(session.endTime)}",
+              "Time: ${_formatTime(widget.session.startTime)} - ${_formatTime(widget.session.endTime)}",
             ),
-            Text("Location: ${session.location ?? 'Not specified'}"),
+            Text("Location: ${widget.session.location ?? 'Not specified'}"),
             const SizedBox(height: 16),
 
             // Check-in button logic
-            if (canCheckIn)
+            if (canCheckIn && !widget.isOwnedByMe)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: onCheckIn,
+                  onPressed: () async {
+                    await _handleCheckIn(widget.session);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                   ),
-                  child: const Text(
-                    "Check In",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text(
+                            "Check In",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                 ),
               )
-            else if (status == 'ongoing')
+            else if (status == 'ongoing' && !widget.isOwnedByMe)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -109,13 +185,16 @@ class SessionCard extends StatelessWidget {
                 ),
               ),
 
-            if (isOwnedByMe && (status == 'scheduled')) ...[
+            if (widget.isOwnedByMe) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed:
+                          _isLoading || status != 'scheduled'
+                              ? null
+                              : _handleStartSession,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.success,
                         foregroundColor: Colors.white,
@@ -124,17 +203,26 @@ class SessionCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      icon: const FaIcon(FontAwesomeIcons.play, size: 10),
+                      icon:
+                          _isLoading
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const FaIcon(FontAwesomeIcons.play, size: 16),
                       label: const Text(
                         "Start Session",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 10,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
 
                   // END SESSION Button
                   Expanded(
@@ -154,7 +242,34 @@ class SessionCard extends StatelessWidget {
                         "End Session",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  //Cancel SESSION Button
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading || status != 'scheduled'
+                              ? null
+                              : (){},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const FaIcon(FontAwesomeIcons.stop, size: 10),
+                      label: const Text(
+                        "Cancel Session",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
                         ),
                       ),
                     ),

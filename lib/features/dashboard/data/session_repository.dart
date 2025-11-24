@@ -35,10 +35,8 @@ class SessionRepository {
     }
   }
 
-  Future<String?> getCurrentLocation(int sessionId) async {
+  Future<String?> CheckinToSession(String sessionId) async {
     Position position = await geolocation.getCurrentLocation();
-    // final String location = await FlutterTimezone.getLocalTimezone();
-    // print("Available Timezones: $location");
     final data = {
       "sessionId": sessionId,
       "latitude": position.latitude,
@@ -49,7 +47,7 @@ class SessionRepository {
       '/v1/organization/sessions/checkin',
       body: data,
     );
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
       return null;
     } else {
       return jsonDecode(response.body)['message'] ?? 'An Error Occured';
@@ -73,9 +71,6 @@ class SessionRepository {
         '/v1/organization/sessions/supervisor_create',
         body: data,
       );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode >= 400) {
         final errorMessage = _extractErrorMessage(response.body);
@@ -113,7 +108,7 @@ class SessionRepository {
     }
   }
 
-  Future<String?> endSession(int sessionId) async {
+  Future<String?> endSession(String sessionId) async {
     final response = await _api.post(
       '/v1/organization/sessions/end_session',
       body: {'sessionId': sessionId},
@@ -127,11 +122,16 @@ class SessionRepository {
     }
   }
 
-  Future<String?> startSession(int sessionId) async {
+  Future<String?> startSession(String sessionId) async {
     final response = await _api.post(
       '/v1/organization/sessions/start_session',
-      body: {'sessionId': sessionId},
+      body: {
+        'sessionId': sessionId,
+        "userTimezone": await FlutterTimezone.getLocalTimezone(),
+      },
     );
+
+
 
     if (response.statusCode == 200) {
       return null;
