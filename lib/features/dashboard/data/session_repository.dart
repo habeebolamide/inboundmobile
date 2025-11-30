@@ -111,7 +111,10 @@ class SessionRepository {
   Future<String?> endSession(String sessionId) async {
     final response = await _api.post(
       '/v1/organization/sessions/end_session',
-      body: {'sessionId': sessionId},
+      body: {
+        'sessionId': sessionId,
+        "userTimezone": await FlutterTimezone.getLocalTimezone(),
+      },
     );
 
     if (response.statusCode == 200) {
@@ -138,6 +141,23 @@ class SessionRepository {
     } else {
       return jsonDecode(response.body)['message'] ??
           'An error occurred while ending the session';
+    }
+  }
+
+  Future<String?> cancelSession(String sessionId) async {
+    final response = await _api.post(
+      '/v1/organization/sessions/cancel_session',
+      body: {
+        'sessionId': sessionId,
+        "userTimezone": await FlutterTimezone.getLocalTimezone(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return null;
+    } else {
+      return jsonDecode(response.body)['message'] ??
+          'An error occurred while cancelling the session';
     }
   }
 }

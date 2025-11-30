@@ -59,6 +59,69 @@ class _SessionCardState extends State<SessionCard> {
     }
   }
 
+  Future<void> _handleEndSession() async {
+    if (widget.session.status?.toLowerCase() != 'scheduled') return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final success = await _sessionRepo.endSession(widget.session.id ?? '');
+
+      if (!mounted) return;
+
+      if (success == null) {
+        showSnackBar(
+          context,
+          "Session started successfully!",
+          AppColors.success,
+        );
+
+        widget.onRefresh.call();
+      } else {
+        showSnackBar(context, success, AppColors.error);
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, e.toString(), AppColors.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+
+  Future<void> _handleCancelSession() async {
+    if (widget.session.status?.toLowerCase() != 'scheduled') return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final success = await _sessionRepo.cancelSession(widget.session.id ?? '');
+
+      if (!mounted) return;
+
+      if (success == null) {
+        showSnackBar(
+          context,
+          "Session Cancelled successfully!",
+          AppColors.success,
+        );
+
+        widget.onRefresh.call();
+      } else {
+        print(success);
+        showSnackBar(context, success, AppColors.error);
+      }
+    } catch (e) {
+      print(e.toString());
+      if (mounted) {
+        showSnackBar(context, e.toString(), AppColors.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _handleCheckIn(SessionModel session) async {
     // return print('Check-in for session ${session.id}');
     if (session.status?.toLowerCase() != 'ongoing') {
@@ -227,7 +290,9 @@ class _SessionCardState extends State<SessionCard> {
                   // END SESSION Button
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: _isLoading || status != 'ongoing'
+                              ? null
+                              : _handleEndSession,
                       // Disable if not ongoing
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -255,7 +320,7 @@ class _SessionCardState extends State<SessionCard> {
                     child: ElevatedButton.icon(
                       onPressed: _isLoading || status != 'scheduled'
                               ? null
-                              : (){},
+                              : _handleCancelSession,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
